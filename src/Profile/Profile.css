@@ -1,0 +1,26 @@
+.identicon {
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.button {
+  color: white;
+  display: inline;
+  font-size: 14px;
+  height: 30px;
+  margin: 10px auto;
+  width: 100px;
+  padding: 8px;
+}
+
+.Login-button:hover {
+  opacity: 0.9;
+}
+
+.Submit-mm {
+  background-color: rgb(135, 212, 90);
+}
+
+.Logout-mm {
+  background-color: rgb(212, 41, 98);
+}

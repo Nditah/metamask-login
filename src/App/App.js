@@ -1,0 +1,50 @@
+import React, { Component } from "react";
+
+import Login from "./../Login";
+import logo from "./logo.svg";
+import Profile from "./../Profile/Profile";
+import "./App.css";
+
+const LS_KEY = "bezop-login:auth";
+
+class App extends Component {
+  componentWillMount() {
+    // Access token is stored in localstorage
+    const auth = JSON.parse(localStorage.getItem(LS_KEY));
+    this.setState({
+      auth
+    });
+  }
+
+  handleLoggedIn = auth => {
+    localStorage.setItem(LS_KEY, JSON.stringify(auth));
+    this.setState({ auth });
+  };
+
+  handleLoggedOut = () => {
+    localStorage.removeItem(LS_KEY);
+    this.setState({ auth: undefined });
+  };
+
+  render() {
+    const { auth } = this.state;
+    
+    return (
+      <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <h1 className="App-title">Welcome to Login with MetaMask On Bezop</h1>
+        </header>
+        <div className="App-intro">
+          {auth ? (
+            <Profile auth={auth} onLoggedOut={this.handleLoggedOut} />
+          ) : (
+            <Login onLoggedIn={this.handleLoggedIn} />
+          )}
+        </div>
+      </div>
+    );
+  }
+}
+
+export default App;
