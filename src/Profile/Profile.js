@@ -24,7 +24,25 @@ class Profile extends Component {
       }
     })
       .then(response => response.json())
-      .then(user => this.setState({ user }))
+      .then(responseJSON => {
+        if(responseJSON.success) {
+          const user= responseJSON.data;
+          console.log(`Mounting ${JSON.stringify( user )}`);
+              
+          const userUpdate = {
+            username: user.username,
+            fullname: user.fullname,
+            phone: user.phone,
+            address: user.address,
+            email: user.email,
+          }
+          localStorage.setItem(this.USER_INFO, JSON.stringify(userUpdate)); 
+          return this.setState({user:userUpdate});
+        }else{
+          return window.alert(responseJSON.message);
+        }
+        
+      })
       .catch(window.alert);
   }
 
@@ -37,24 +55,18 @@ class Profile extends Component {
 
   handleSubmit = (event) => {
     event.preventDefault();
-    /*
-    let data = {
-      username: this.state.name,
-      fullname: this.state.fullname,
-      phone: this.state.phone,
-      address: this.state.address,
-      email: this.state.email,
-    }
-    */
+    
    console.log(JSON.stringify(this.state.user ));
 
     const { auth: { accessToken } } = this.props;
-    const { payload: { id } } = jwtDecode(accessToken);
+    const { payload: { id, publicAddress } } = jwtDecode(accessToken);
 
     this.setState({ loading: true });
-    
+
+    const user = Object.assign({publicAddress}, this.state.user);
+    console.log(`Sending ${JSON.stringify( user )}`);
     fetch(`${this.API_URL}/admins/${id}`, {
-      body: JSON.stringify(this.state.user ),
+      body: JSON.stringify( user ),
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json"

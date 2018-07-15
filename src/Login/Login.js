@@ -21,6 +21,10 @@ class Login extends Component {
     return false;   
   }
 
+  // //////////////////////////////////////////////////
+  // Step 1. Login or Signup reads address, checks backend
+  // //////////////////////////////////////////////////
+
   handleLogin = () => {
     const { onLoggedIn } = this.props;
     const authType = "login";
@@ -50,7 +54,8 @@ class Login extends Component {
       // 1b. If yes, retrieve { publicAddress, nonce, authType } from responceJSON.data
       .then((responceJSON) => {
         if(responceJSON.success && Object.keys(responceJSON.data).length > 1 ){
-          console.log(`\r\n1b. From handleLogin Return Address, Nonce, type ${JSON.stringify(responceJSON.data)}`);
+          console.log(`\r\n1b. From handleLogin Return Address, Nonce,\
+           type ${JSON.stringify(responceJSON.data)}`);
           return (responceJSON.data);
         }else{
           console.log(`\r\n1b. From handleLogin Return Error ${responceJSON.message}`);
@@ -73,27 +78,36 @@ class Login extends Component {
       });
   }
 
-// 2. Record Found, thus Popup MetaMask modal to sign message  to login
+  // //////////////////////////////////////////////////
+  // Step 2. Record Found, thus Popup MetaMask modal to sign message  to login
+  // //////////////////////////////////////////////////
+
 handleSignMessage = ({ publicAddress, nonce, authType }) => {
-  console.log(`\r\n2a. From handleSignMessage Given Address ${publicAddress}, Nonce ${nonce}, type ${authType}`);
+  console.log(`\r\n2a. From handleSignMessage Given Address ${publicAddress},\
+   Nonce ${nonce}, type ${authType}`);
   return new Promise((resolve, reject) =>
     web3.personal.sign(
       web3.fromUtf8(`I am signing my one-time nonce: ${nonce} to ${authType}`),
       publicAddress,
       (err, signature) => {
         if (err) return reject(err);
-        console.log(`\r\n2b. From handleSignMessage Return Address ${publicAddress} signature ${signature} type ${authType}`);
+        console.log(`\r\n2b. From handleSignMessage Return Address ${publicAddress}\
+         signature ${signature} type ${authType}`);
         return resolve({ publicAddress, signature, authType });
       }
     )
   );
 }
 
-// 3. Send signature to backend on the /auth route
+  // //////////////////////////////////////////////////
+  // Step 3. Send signature to backend on the /auth route
+  // //////////////////////////////////////////////////
+
   handleAuthenticate = ({ publicAddress, signature, authType }) => {
-    console.log(`\r\n3a. From handleAuthenticate Given Address ${publicAddress} signature ${signature} type ${authType}`);
-    return fetch(`${this.API_URL}/admin/auth`, {
-      body: JSON.stringify({ publicAddress, signature, authType }),
+    console.log(`\r\n3a. From handleAuthenticate Given Address ${publicAddress}\
+     signature ${signature} type ${authType}`);
+    return fetch(`${this.API_URL}/admin/auth/${authType}`, {
+      body: JSON.stringify({ publicAddress, signature }),
       headers: {
         "Content-Type": "application/json"
       },
@@ -101,7 +115,7 @@ handleSignMessage = ({ publicAddress, nonce, authType }) => {
     }).then((response) => response.json())
       .then((responseJSON) => {
         console.log(`\r\n3b. From handleAuthenticate Return token ${JSON.stringify(responseJSON)} `);
-        if(responseJSON.success && Object.keys(responseJSON.data).length > 1) {
+        if(responseJSON.success && Object.keys(responseJSON.data).length === 1) {
           return responseJSON.data;
         }else{
           return window.alert(responseJSON.message);
