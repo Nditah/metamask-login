@@ -25,10 +25,7 @@ class Login extends Component {
   // Step 1. Login or Signup reads address, checks backend
   // //////////////////////////////////////////////////
 
-  handleLogin = () => {
-    const { onLoggedIn } = this.props;
-    const authType = "login";
-    
+  getPublicAddress = () => {
     if (!window.web3) {
       window.alert("Please install MetaMask first.");
       return;
@@ -43,12 +40,65 @@ class Login extends Component {
       return;
     }
     const publicAddress = web3.eth.coinbase.toLowerCase();
+    return publicAddress;
+  }
+
+
+  handleSignup = () => {
+    const { onLoggedIn } = this.props;
+    const authType = "signup";
+    const userType = "admin";
+    
+    const publicAddress = this.getPublicAddress();
+
+    this.setState({ signupLoading: true });
+
+    console.log(`\r\n1a. From handleLogin Given type ${authType}, Address ${publicAddress} `);
+
+    // 1a. Look if user with current publicAddress is already present on backend
+    fetch(`${this.API_URL}/${userType}/${authType}/publicaddress/${publicAddress}`)
+      .then(response => response.json())
+
+      // 1b. If yes, retrieve { publicAddress, nonce, authType } from responceJSON.data
+      .then((responceJSON) => {
+        if(responceJSON.success && Object.keys(responceJSON.data).length > 1 ){
+          console.log(`\r\n1b. From handleLogin Return Address, Nonce,\
+           type ${JSON.stringify(responceJSON.data)}`);
+          return (responceJSON.data);
+        }else{
+          console.log(`\r\n1b. From handleLogin Return Error ${responceJSON.message}`);
+          throw new Error(responceJSON.message);
+        }
+      })
+
+      // 2. Popup MetaMask confirmation modal to sign message
+      .then(this.handleSignMessage)
+
+      // 3. Send signature to backend on the /auth route
+      .then(this.handleAuthenticate)
+
+      // 4. Pass accessToken back to parent component (to save it in localStorage)
+      .then(onLoggedIn)
+
+      .catch(err => {
+        window.alert(err);
+        this.setState({ signupLoading: false });
+      });
+  }
+
+  handleLogin = () => {
+    const { onLoggedIn } = this.props;
+    const authType = "login";
+    const userType = "admin";
+    
+    const publicAddress = this.getPublicAddress();
+
     this.setState({ loginLoading: true });
 
     console.log(`\r\n1a. From handleLogin Given type ${authType}, Address ${publicAddress} `);
 
     // 1a. Look if user with current publicAddress is already present on backend
-    fetch(`${this.API_URL}/admins/${authType}/publicaddress/${publicAddress}`)
+    fetch(`${this.API_URL}/${userType}/${authType}/publicaddress/${publicAddress}`)
       .then(response => response.json())
 
       // 1b. If yes, retrieve { publicAddress, nonce, authType } from responceJSON.data
